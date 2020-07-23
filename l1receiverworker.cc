@@ -68,7 +68,17 @@ void thread_task(void* arg) {
         fprintf(stderr, "Listen error.\n");
     }
 
+#if 0
     uv_run(loop, UV_RUN_DEFAULT);
+#else
+    while (false == pthis->stopped()) {
+        int ret = uv_run(loop, UV_RUN_NOWAIT);
+        fprintf(stderr, ".");
+        if (0 == ret) {
+            break;
+        }
+    }
+#endif
 
 //    if (false == pthis->stopped()) {
  //   } 

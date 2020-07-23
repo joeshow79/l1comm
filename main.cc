@@ -16,7 +16,7 @@ int main() {
 
     receiver.start();
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(8000));
 
     receiver.stop();
 
