@@ -1,8 +1,12 @@
+#include <chrono>
+#include <thread>
+
 #include <netinet/in.h>
 
 #include "l1receiverworker.h"
 
 uv_loop_t* loop{nullptr};
+std::function<void(L1Request)>* cb{nullptr};
 
 void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 {
@@ -21,7 +25,21 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
       uv_close((uv_handle_t *)stream, NULL);
      }
 
+     // TODO: the length of the data packet should be 8
+     if (nread != 8) {
+        fprintf(stderr, "Wrong packet received with length %ld.\n", nread);
+     }
+
      int r = uv_write(req, stream, buf, 1, NULL);
+
+     L1Request l1_req = *(L1Request*)(buf->base);
+
+     l1_req.set_request_type(L1Request::RequestType::HEATBEAT_AND_SIGNAL).
+       set_signal_type(L1Request::SignalType::INPLACE);
+
+     if (nullptr != cb) {
+      (*cb)(l1_req);
+     }
 
      if (r) {
       /* error */
@@ -71,9 +89,14 @@ void thread_task(void* arg) {
 #if 0
     uv_run(loop, UV_RUN_DEFAULT);
 #else
+    cb = &(pthis->callback());
+
     while (false == pthis->stopped()) {
         int ret = uv_run(loop, UV_RUN_NOWAIT);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         fprintf(stderr, ".");
+
         if (0 == ret) {
             break;
         }
@@ -84,7 +107,7 @@ void thread_task(void* arg) {
  //   } 
 }
 
-L1ReceiverWorker::L1ReceiverWorker(const std::string& host, int port, std::function<void(void)> callback):
+L1ReceiverWorker::L1ReceiverWorker(const std::string& host, int port, std::function<void(L1Request)> callback):
     _host(host),
     _port(port),
     _cb(callback) {
