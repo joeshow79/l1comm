@@ -12,7 +12,7 @@ int main() {
 
   assert(8==sizeof(req));
 
-  L1Request::RequestType t{L1Request::RequestType::HEATBEAT_AND_SIGNAL};
+  L1Request::RequestType t{L1Request::RequestType::HEARTBEAT_AND_SIGNAL};
 
   req.set_request_type(t);
 

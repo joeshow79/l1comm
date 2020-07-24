@@ -3,12 +3,12 @@
 
 #include <netinet/in.h>
 
-#include "l1receiverworker.h"
+#include "l1receiveworker.h"
 
 uv_loop_t* loop{nullptr};
-std::function<void(L1Request)>* cb{nullptr};
+std::function<void(void)>* cb{nullptr};
 
-void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
+static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 {
      buf->base = (char*)malloc(size);
      buf->len = size;
@@ -16,8 +16,6 @@ void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 
 void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
 {
-     uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
-
      if (nread == -1) {
       /* if (uv_last_error(loop).code != UV_EOF) { */
       /* } */
@@ -25,24 +23,32 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
       uv_close((uv_handle_t *)stream, NULL);
      }
 
-     // TODO: the length of the data packet should be 8
-     if (nread != 8) {
+     // validate
+     if (nread != sizeof(L1Request)) {
         fprintf(stderr, "Wrong packet received with length %ld.\n", nread);
      }
 
-     int r = uv_write(req, stream, buf, 1, NULL);
+#if 0  
+     uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
 
-     L1Request l1_req = *(L1Request*)(buf->base);
-
-     l1_req.set_request_type(L1Request::RequestType::HEATBEAT_AND_SIGNAL).
-       set_signal_type(L1Request::SignalType::INPLACE);
-
-     if (nullptr != cb) {
-      (*cb)(l1_req);
-     }
+     int r = uv_write(req, stream, buf, 1, NULL);   // echo
 
      if (r) {
       /* error */
+     }
+
+#endif 
+
+     L1Request l1_req = *(L1Request*)(buf->base);
+
+     //l1_req.set_request_type(L1Request::RequestType::HEARTBEAT_AND_SIGNAL).
+       //set_signal_type(L1Request::SignalType::INPLACE);
+
+     if (nullptr != cb &&
+        (l1_req.get_request_type() ==
+         L1Request::RequestType::HEARTBEAT_AND_SIGNAL) 
+        && (l1_req.get_signal_type() == L1Request::SignalType::INPLACE)) {
+        (*cb)();
      }
 
      free(buf->base);
@@ -68,7 +74,7 @@ void on_connection(uv_stream_t *server, int status) {
 void thread_task(void* arg) {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
-    L1ReceiverWorker* pthis = (L1ReceiverWorker*)arg;
+    L1ReceiveWorker* pthis = (L1ReceiveWorker*)arg;
 
     loop = uv_default_loop();
     uv_tcp_t server;
@@ -95,7 +101,7 @@ void thread_task(void* arg) {
         int ret = uv_run(loop, UV_RUN_NOWAIT);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        fprintf(stderr, ".");
+        //fprintf(stderr, ".");
 
         if (0 == ret) {
             break;
@@ -107,13 +113,13 @@ void thread_task(void* arg) {
  //   } 
 }
 
-L1ReceiverWorker::L1ReceiverWorker(const std::string& host, int port, std::function<void(L1Request)> callback):
+L1ReceiveWorker::L1ReceiveWorker(const std::string& host, int port, std::function<void(void)> callback):
     _host(host),
     _port(port),
     _cb(callback) {
 }
 
-bool L1ReceiverWorker::start() {
+bool L1ReceiveWorker::start() {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
     _stop = false;
@@ -123,7 +129,7 @@ bool L1ReceiverWorker::start() {
     return true;
 }
 
-bool L1ReceiverWorker::stop() {
+bool L1ReceiveWorker::stop() {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
     _stop = true;

@@ -1,0 +1,17 @@
+@startuml
+Master -> L1ReceiveWorker : new and register callback
+Master -> L1ReceiveWorker : start
+L1ReceiveWorker -> L1ReceiveWorker : listen 
+Master -> L1SendWorker : new
+Master -> L1SendWorker : start
+L1SendWorker -> L1 : connect 
+L1SendWorker -> L1 : heartbeat 
+L1 -> L1ReceiveWorker : connect 
+L1 -> L1ReceiveWorker : heartbeat 
+L1 -> L1ReceiveWorker : signal
+L1ReceiveWorker -> Master : callback
+ResultQueue -> L1SendWorker : notify
+L1SendWorker -> L1 : send 
+Master -> L1ReceiveWorker : stop
+Master -> L1SendWorker : stop
+@enduml

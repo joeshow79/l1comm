@@ -5,15 +5,15 @@
 #include <stdio.h>
 
 #include "l1.h"
-#include "l1receiverworker.h"
+#include "l1receiveworker.h"
 
-void receiver_callback(L1Request req) {
-    printf("Received request %s.\n", req.to_string().c_str());
+void receiver_callback(void) {
+    printf("Received request.\n");
 }
 
 int main() {
-    std::function<void(L1Request)> cb = receiver_callback;
-    L1ReceiverWorker receiver{"0.0.0.0", 3001, cb};
+    std::function<void(void)> cb = receiver_callback;
+    L1ReceiveWorker receiver{"0.0.0.0", 3001, cb};
 
     receiver.start();
 
