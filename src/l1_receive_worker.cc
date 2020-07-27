@@ -5,8 +5,7 @@
 
 #include "l1_receive_worker.h"
 
-uv_loop_t* loop{nullptr};
-std::function<void(void)>* cb{nullptr};
+//std::function<void(void)>* cb{nullptr};
 
 static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 {
@@ -14,13 +13,14 @@ static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
      buf->len = size;
 }
 
-void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
+static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
 {
      if (nread == -1) {
       /* if (uv_last_error(loop).code != UV_EOF) { */
       /* } */
 
-      uv_close((uv_handle_t *)stream, NULL);
+        uv_close((uv_handle_t *)stream, NULL);
+        free(stream);
      }
 
      // validate
@@ -28,21 +28,12 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
         fprintf(stderr, "Wrong packet received with length %ld.\n", nread);
      }
 
-#if 0  
-     uv_write_t *req = (uv_write_t *)malloc(sizeof(uv_write_t));
-
-     int r = uv_write(req, stream, buf, 1, NULL);   // echo
-
-     if (r) {
-      /* error */
-     }
-
-#endif 
-
      L1Request l1_req = *(L1Request*)(buf->base);
 
      //l1_req.set_request_type(L1Request::RequestType::HEARTBEAT_AND_SIGNAL).
        //set_signal_type(L1Request::SignalType::INPLACE);
+
+    std::function<void(void)>* cb = (std::function<void()>*)stream->data;
 
      if (nullptr != cb &&
         (l1_req.GetRequestType() ==
@@ -54,7 +45,7 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
      free(buf->base);
 }
 
-void on_connection(uv_stream_t *server, int status) {
+static void on_connection(uv_stream_t *server, int status) {
     if (status < 0) {
         fprintf(stderr, "New connection error %s\n", uv_strerror(status));
         // error!
@@ -62,31 +53,33 @@ void on_connection(uv_stream_t *server, int status) {
     }
 
     uv_tcp_t *client = (uv_tcp_t*) malloc(sizeof(uv_tcp_t));
-    uv_tcp_init(loop, client);
+    uv_tcp_init(L1ReceiveWorker::GetLoop(), client);
     if (uv_accept(server, (uv_stream_t*) client) == 0) {
+        client->data = server->data;
         uv_read_start((uv_stream_t*) client, alloc_buffer, on_read);
     }
     else {
         uv_close((uv_handle_t*) client, NULL);
+        free(client);
     }
 }
 
-static void thread_task(void* arg) {
+void L1ReceiveWorker::thread_task(void* arg) {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
     L1ReceiveWorker* pthis = (L1ReceiveWorker*)arg;
 
-    loop = uv_default_loop();
-    uv_tcp_t server;
-    uv_tcp_init(loop, &server);
+    uv_tcp_t* server = (uv_tcp_t*)malloc(sizeof(uv_tcp_t));
+
+    uv_tcp_init(L1ReceiveWorker::GetLoop(), server);
 
     struct sockaddr_in addr;
 
     int r = uv_ip4_addr(pthis->Host().c_str(), pthis->Port(), &addr);
 
-    r = uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
+    r = uv_tcp_bind(server, (const struct sockaddr*)&addr, 0);
 
-    r = uv_listen((uv_stream_t*)&server, 4/*BACKLOG*/, on_connection);
+    r = uv_listen((uv_stream_t*)server, 4/*BACKLOG*/, on_connection);
 
     if (r) {
         fprintf(stderr, "Listen error.\n");
@@ -95,13 +88,14 @@ static void thread_task(void* arg) {
 #if 0
     uv_run(loop, UV_RUN_DEFAULT);
 #else
-    cb = &(pthis->Callback());
+    server->data = (void*)(&pthis->Callback());
 
     while (false == pthis->Stopped()) {
-        int ret = uv_run(loop, UV_RUN_NOWAIT);
+        int ret = uv_run(L1ReceiveWorker::GetLoop(), UV_RUN_NOWAIT);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        //fprintf(stderr, ".");
+
+        fprintf(stderr, ">");
 
         if (0 == ret) {
             break;
@@ -109,9 +103,9 @@ static void thread_task(void* arg) {
     }
 #endif
 
-//    if (false == pthis->stopped()) {
- //   } 
- 
+    uv_close((uv_handle_t*)server, NULL);
+    free(server);
+
     fprintf(stderr, "End of L1ReceiveWorker loop.\n");
 }
 
@@ -136,8 +130,8 @@ bool L1ReceiveWorker::Stop() {
 
     stop_ = true;
 
-    if (nullptr != loop) {
-        uv_loop_close(loop);
+    if (nullptr != L1ReceiveWorker::GetLoop()) {
+        uv_loop_close(L1ReceiveWorker::GetLoop());
     }
 
     uv_thread_join(&thread_);

@@ -32,6 +32,20 @@ public:
 
     std::function<void(void)>& Callback() {return cb_;}
 
+    static uv_loop_t* GetLoop() {
+      static uv_loop_t* loop{nullptr};
+
+      if (nullptr == loop) {
+        loop = new uv_loop_t();
+        uv_loop_init(loop);
+      }
+
+      return loop;
+    }
+
+private:
+    static void thread_task(void* arg);
+
 private:
     std::string host_;
     int port_;
