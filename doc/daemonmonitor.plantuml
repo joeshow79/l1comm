@@ -1,0 +1,13 @@
+@startuml
+start
+
+repeat
+ if (LogicSystem process is live) then (yes)
+  :sleep for a while;
+else (no)
+  :Spawn LogicSystem process;
+endif
+repeat while ()
+
+stop
+@enduml
