@@ -15,5 +15,5 @@ all: demo
 simple_main: sample/simple_main.cc
 	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS)
 
-demo: sample/main.cc src/l1_receive_worker.cc
+demo: sample/main.cc src/l1_receive_worker.cc src/l1_send_worker.cc
 	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS)

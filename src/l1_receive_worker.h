@@ -37,6 +37,5 @@ private:
     int port_;
     std::function<void(void)> cb_;
     std::atomic<bool> stop_{false};
-
     uv_thread_t thread_;
 }; 

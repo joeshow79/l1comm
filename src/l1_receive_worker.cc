@@ -71,7 +71,7 @@ void on_connection(uv_stream_t *server, int status) {
     }
 }
 
-void thread_task(void* arg) {
+static void thread_task(void* arg) {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
     L1ReceiveWorker* pthis = (L1ReceiveWorker*)arg;
@@ -111,6 +111,8 @@ void thread_task(void* arg) {
 
 //    if (false == pthis->stopped()) {
  //   } 
+ 
+    fprintf(stderr, "End of L1ReceiveWorker loop.\n");
 }
 
 L1ReceiveWorker::L1ReceiveWorker(const std::string& host, int port, std::function<void(void)> callback):
