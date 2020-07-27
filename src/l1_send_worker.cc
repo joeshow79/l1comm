@@ -19,22 +19,6 @@ static void on_connect(uv_connect_t *server, int status) {
         // error!
         return;
     }
-
-#if 1
-    uv_write_t* req;
-    uv_buf_t buf;
-    int i;
-
-    buf = uv_buf_init((char*)"abcd\n", 5);
-
-    for (i = 0; i < 2; i++) {
-      fprintf(stderr, "write to peer.\n");
-
-      req = (uv_write_t*) malloc(sizeof *req);
-
-      uv_write(req, (uv_stream_t*)server->data, &buf, 1, write_cb);
-    }
-#endif
 }
 
 static void on_close(uv_handle_t* handle) {
@@ -62,15 +46,35 @@ void L1SendWorker::thread_task(void* arg) {
 
     while (false == pthis->Stopped()) {
       int ret = uv_run(L1SendWorker::GetLoop(), UV_RUN_NOWAIT);
+      // fprintf(stderr, "error code: %d. %s, %s\n", ret, uv_err_name(ret), uv_strerror(ret));
 
-      if (0 != ret) {
-        break;
-       }
+      //if (0 != ret) {
+        //break;
+       //}
 
       // TODO: fetch data and send to peer
+      
+#if 0  // Test data
+    uv_write_t* req;
+    uv_buf_t buf;
+    int i;
+
+    buf = uv_buf_init((char*)"abcd\n", 5);
+
+    for (i = 0; i < 2; i++) {
+      fprintf(stderr, "write to peer.\n");
+
+      req = (uv_write_t*) malloc(sizeof *req);
+
+      uv_write(req, (uv_stream_t*)socket, &buf, 1, write_cb);
+    }
+#else
+    //TODO: Real data
+#endif
+
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-      fprintf(stderr, "<");
+      //fprintf(stderr, "<");
     }
 
     uv_close((uv_handle_t*)socket, on_close);

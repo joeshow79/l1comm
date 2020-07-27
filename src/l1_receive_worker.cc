@@ -5,8 +5,6 @@
 
 #include "l1_receive_worker.h"
 
-//std::function<void(void)>* cb{nullptr};
-
 static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 {
      buf->base = (char*)malloc(size);
@@ -46,6 +44,8 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
 }
 
 static void on_connection(uv_stream_t *server, int status) {
+    fprintf(stderr, "New connection ... \n");
+
     if (status < 0) {
         fprintf(stderr, "New connection error %s\n", uv_strerror(status));
         // error!
@@ -92,14 +92,16 @@ void L1ReceiveWorker::thread_task(void* arg) {
 
     while (false == pthis->Stopped()) {
         int ret = uv_run(L1ReceiveWorker::GetLoop(), UV_RUN_NOWAIT);
+        // fprintf(stderr, "error code: %d. %s, %s\n", ret, uv_err_name(ret), uv_strerror(ret));
+
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        fprintf(stderr, ">");
+        //fprintf(stderr, ">");
 
-        if (0 == ret) {
-            break;
-        }
+        //if (0 == ret) {
+            //break;
+        //}
     }
 #endif
 

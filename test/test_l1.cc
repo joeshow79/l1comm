@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "l1.h"
+#include "src/l1.h"
 
 int main() {
   L1Request req;
@@ -23,6 +23,14 @@ int main() {
   req.SetSignalType(s);
 
   assert(s == req.GetSignalType());
+
+  // Response
+  L1Response res;
+
+  fprintf(stderr, "Expected size is 32, actual size of L1Response: %ld\n",
+      sizeof(res));
+
+  assert(32==sizeof(res));
 
   fprintf(stderr, "Pass test.\n");
 
