@@ -28,11 +28,11 @@ struct L1Request {
     dbw0 = num;
   }
 
-  DWORD get_heartbeat_seq_num() {
+  DWORD GetHeartbeatSeqNum() {
     return dbw0;
   }
 
-  L1Request& set_request_type(RequestType t) {
+  L1Request& SetRequestType(RequestType t) {
     std::bitset<16> v(dbw2);
 
     if (RequestType::HEARTBEAT == t) {
@@ -46,7 +46,7 @@ struct L1Request {
     return (*this);
   }
 
-  RequestType get_request_type() {
+  RequestType GetRequestType() {
     std::bitset<16> v(dbw2);
 
     if (v.test(0)) {
@@ -55,7 +55,7 @@ struct L1Request {
     return RequestType::HEARTBEAT;
   }
 
-  L1Request& set_signal_type(SignalType t) {
+  L1Request& SetSignalType(SignalType t) {
     std::bitset<16> v(dbw2);
 
     if (SignalType::NOTREADY == t) {
@@ -69,7 +69,7 @@ struct L1Request {
     return (*this);
   }
 
-  SignalType get_signal_type() {
+  SignalType GetSignalType() {
     std::bitset<16> v(dbw2);
 
     if (v.test(1)) {
@@ -78,7 +78,7 @@ struct L1Request {
     return SignalType::NOTREADY;
   }
 
-  std::string to_string() {
+  std::string ToString() {
     std::string ret;
 
     std::bitset<16> v(dbw2);

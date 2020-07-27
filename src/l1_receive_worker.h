@@ -18,25 +18,25 @@ public:
 
     ~L1ReceiveWorker() = default;
 
-    bool start();
+    bool Start();
 
-    bool stop();
+    bool Stop();
 
-    bool stopped() {
-        return _stop.load();
+    bool Stopped() {
+        return stop_.load();
     }
 
-    std::string host() {return _host;}
+    std::string Host() {return host_;}
 
-    int port() {return _port;}
+    int Port() {return port_;}
 
-    std::function<void(void)>& callback() {return _cb;}
+    std::function<void(void)>& Callback() {return cb_;}
 
 private:
-    std::string _host;
-    int _port;
-    std::function<void(void)> _cb;
-    std::atomic<bool> _stop{false};
+    std::string host_;
+    int port_;
+    std::function<void(void)> cb_;
+    std::atomic<bool> stop_{false};
 
-    uv_thread_t _thread;
+    uv_thread_t thread_;
 }; 

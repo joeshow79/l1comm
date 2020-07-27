@@ -14,15 +14,15 @@ int main() {
 
   L1Request::RequestType t{L1Request::RequestType::HEARTBEAT_AND_SIGNAL};
 
-  req.set_request_type(t);
+  req.SetRequestType(t);
 
-  assert(t == req.get_request_type());
+  assert(t == req.GetRequestType());
 
   L1Request::SignalType s{L1Request::SignalType::INPLACE};
 
-  req.set_signal_type(s);
+  req.SetSignalType(s);
 
-  assert(s == req.get_signal_type());
+  assert(s == req.GetSignalType());
 
   fprintf(stderr, "Pass test.\n");
 

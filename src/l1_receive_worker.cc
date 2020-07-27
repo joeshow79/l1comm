@@ -3,7 +3,7 @@
 
 #include <netinet/in.h>
 
-#include "l1receiveworker.h"
+#include "l1_receive_worker.h"
 
 uv_loop_t* loop{nullptr};
 std::function<void(void)>* cb{nullptr};
@@ -45,9 +45,9 @@ void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
        //set_signal_type(L1Request::SignalType::INPLACE);
 
      if (nullptr != cb &&
-        (l1_req.get_request_type() ==
+        (l1_req.GetRequestType() ==
          L1Request::RequestType::HEARTBEAT_AND_SIGNAL) 
-        && (l1_req.get_signal_type() == L1Request::SignalType::INPLACE)) {
+        && (l1_req.GetSignalType() == L1Request::SignalType::INPLACE)) {
         (*cb)();
      }
 
@@ -82,7 +82,7 @@ void thread_task(void* arg) {
 
     struct sockaddr_in addr;
 
-    int r = uv_ip4_addr(pthis->host().c_str(), pthis->port(), &addr);
+    int r = uv_ip4_addr(pthis->Host().c_str(), pthis->Port(), &addr);
 
     r = uv_tcp_bind(&server, (const struct sockaddr*)&addr, 0);
 
@@ -95,9 +95,9 @@ void thread_task(void* arg) {
 #if 0
     uv_run(loop, UV_RUN_DEFAULT);
 #else
-    cb = &(pthis->callback());
+    cb = &(pthis->Callback());
 
-    while (false == pthis->stopped()) {
+    while (false == pthis->Stopped()) {
         int ret = uv_run(loop, UV_RUN_NOWAIT);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -114,31 +114,31 @@ void thread_task(void* arg) {
 }
 
 L1ReceiveWorker::L1ReceiveWorker(const std::string& host, int port, std::function<void(void)> callback):
-    _host(host),
-    _port(port),
-    _cb(callback) {
+    host_(host),
+    port_(port),
+    cb_(callback) {
 }
 
-bool L1ReceiveWorker::start() {
+bool L1ReceiveWorker::Start() {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
-    _stop = false;
+    stop_ = false;
 
-    uv_thread_create(&_thread, thread_task, this);
+    uv_thread_create(&thread_, thread_task, this);
 
     return true;
 }
 
-bool L1ReceiveWorker::stop() {
+bool L1ReceiveWorker::Stop() {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
-    _stop = true;
+    stop_ = true;
 
     if (nullptr != loop) {
         uv_loop_close(loop);
     }
 
-    uv_thread_join(&_thread);
+    uv_thread_join(&thread_);
 
     return true;
 }
