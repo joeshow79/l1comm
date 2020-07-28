@@ -13,17 +13,22 @@ static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf)
 
 static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf)
 {
-     if (nread == -1) {
-      /* if (uv_last_error(loop).code != UV_EOF) { */
-      /* } */
+     if (nread == -1 || (int)nread == -4095) {
+      //if (uv_last_error(L1ReceiveWorker::GetLoop()).code == UV_EOF) {
+        //fprintf(stderr, "UV_EOF received.\n");
+      //}
+
+        fprintf(stderr, "going to close the socket.\n");
 
         uv_close((uv_handle_t *)stream, NULL);
         free(stream);
+
+        return;
      }
 
      // validate
      if (nread != sizeof(L1Request)) {
-        fprintf(stderr, "Wrong packet received with length %ld.\n", nread);
+        fprintf(stderr, "Wrong packet received with length %d.\n",(int) nread);
      }
 
      L1Request l1_req = *(L1Request*)(buf->base);
@@ -93,7 +98,6 @@ void L1ReceiveWorker::thread_task(void* arg) {
     while (false == pthis->Stopped()) {
         int ret = uv_run(L1ReceiveWorker::GetLoop(), UV_RUN_NOWAIT);
         // fprintf(stderr, "error code: %d. %s, %s\n", ret, uv_err_name(ret), uv_strerror(ret));
-
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
