@@ -10,9 +10,9 @@ ifeq (Linux, $(uname_S))
 LIBS=-lrt -ldl -lm -pthread
 endif
 
-all: test_l1
+all: test_l1 test_uvstop
 
-test_l1: test_l1.cc
+test_%: test_%.cc
 	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS)
 	./$@
 	rm -rf ./$@
