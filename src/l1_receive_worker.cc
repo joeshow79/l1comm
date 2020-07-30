@@ -38,7 +38,13 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       (l1_req.GetRequestType() ==
        L1Request::RequestType::HEARTBEAT_AND_SIGNAL) &&
       (l1_req.GetSignalType() == L1Request::SignalType::INPLACE)) {
+    fprintf(stderr, "Receive HB: %u with signal.\n", l1_req.GetHeartbeatSeqNum());
+
     (*cb)();
+  } else {
+    if (l1_req.GetRequestType() == L1Request::RequestType::HEARTBEAT){
+      fprintf(stderr, "Receive HB: %u\n", l1_req.GetHeartbeatSeqNum());
+    }
   }
 
   free(buf->base);
