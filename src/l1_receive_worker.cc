@@ -10,6 +10,12 @@ static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf) {
   buf->len = size;
 }
 
+static void on_close(uv_handle_t* handle) {
+  fprintf(stderr, "%s\n", __FUNCTION__);
+  // TODO:
+  free(handle);
+}
+
 static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
   if (nread < 0) {
     if (nread != UV_EOF) {
@@ -17,8 +23,7 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
     }
     fprintf(stderr, "going to close the socket.\n");
 
-    uv_close((uv_handle_t *)stream, NULL);
-    free(stream);
+    uv_close((uv_handle_t *)stream, on_close);
     return;
   }
 
@@ -53,9 +58,10 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
 static void on_connection(uv_stream_t *server, int status) {
   fprintf(stderr, "New connection ... \n");
 
-  if (status < 0) {
+  if (status != 0) {
     fprintf(stderr, "New connection error %s\n", uv_strerror(status));
     // error!
+     uv_close((uv_handle_t *)server, on_close);
     return;
   }
 
@@ -65,8 +71,7 @@ static void on_connection(uv_stream_t *server, int status) {
     client->data = server->data;
     uv_read_start((uv_stream_t *)client, alloc_buffer, on_read);
   } else {
-    uv_close((uv_handle_t *)client, NULL);
-    free(client);
+    uv_close((uv_handle_t *)client, on_close);
   }
 }
 
@@ -111,8 +116,7 @@ void L1ReceiveWorker::thread_task(void *arg) {
   }
 #endif
 
-  uv_close((uv_handle_t *)server, NULL);
-  free(server);
+  uv_close((uv_handle_t *)server, on_close);
 
   fprintf(stderr, "End of L1ReceiveWorker loop.\n");
 }

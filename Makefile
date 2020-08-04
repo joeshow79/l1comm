@@ -1,7 +1,7 @@
 .PHONY: all
 
 UV_LIB=$.lib/libuv.a
-CFLAGS=-g -Wall -I./include -I./src -std=c++14
+CFLAGS=-g -Wall -I./include -I./src -std=c++14 -O0
 LIBS=
 
 uname_S=$(shell uname -s)
@@ -17,3 +17,4 @@ simple_main: sample/simple_main.cc
 
 demo: sample/main.cc src/l1_receive_worker.cc src/l1_send_worker.cc
 	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS)
+	# valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all

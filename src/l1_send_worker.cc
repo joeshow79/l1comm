@@ -12,20 +12,21 @@ static void write_cb(uv_write_t* req, int status) {
   free(req);
 }
 
+static void on_close(uv_handle_t* handle) {
+  fprintf(stderr, "%s\n", __FUNCTION__);
+  // TODO:
+  free(handle);
+}
+
 static void on_connect(uv_connect_t *server, int status) {
     fprintf(stderr, "%s\n", __FUNCTION__);
 
     if (status < 0) {
         fprintf(stderr, "New connection error %s\n", uv_strerror(status));
         // error!
+        uv_close((uv_handle_t*)server, on_close);
         return;
     }
-}
-
-static void on_close(uv_handle_t* handle) {
-  fprintf(stderr, "%s\n", __FUNCTION__);
-  // TODO:
-  free(handle);
 }
 
 static void send_heartbeat_cb(uv_write_t* req, int status) {
@@ -38,7 +39,7 @@ static void on_timer(uv_timer_t* handle) {
     uv_tcp_t* socket = (uv_tcp_t*)(handle->data);
 
     L1Response* payload = (L1Response*)malloc(sizeof(L1Response));
-    unsigned int num = NumGenerator<unsigned int>::GetNum();
+    unsigned short num = NumGenerator<unsigned short>::GetNum();
     payload->dbw0 = num;
 
     fprintf(stderr, "Send HB: %u\n", num);
@@ -76,7 +77,7 @@ void L1SendWorker::thread_task(void* arg) {
     uv_timer_t* timer = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(L1SendWorker::GetLoop(), timer);
     timer->data = socket;
-    uv_timer_start(timer, on_timer, 5000, 10000);
+    uv_timer_start(timer, on_timer, 5000, 1);
 
     while (false == pthis->Stopped()) {
       int ret = uv_run(L1SendWorker::GetLoop(), UV_RUN_NOWAIT);
@@ -111,9 +112,8 @@ void L1SendWorker::thread_task(void* arg) {
       //fprintf(stderr, "<");
     }
 
+    uv_close((uv_handle_t*)connect, on_close);
     uv_close((uv_handle_t*)socket, on_close);
-    // FIXME: double free?
-    free(socket);
 
     uv_timer_stop(timer);
     free(timer);
