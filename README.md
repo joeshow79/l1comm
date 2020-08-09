@@ -26,3 +26,4 @@ callback will be called if any interesting happen.
 
 ![avatar](./doc/sequence.png)
 
+valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all ./sender

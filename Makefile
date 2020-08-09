@@ -13,7 +13,7 @@ endif
 all: demo sender receiver
 
 demo: sample/main.cc src/l1_receive_worker.cc src/l1_send_worker.cc
-	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS)
+	g++ $(CFLAGS) -o $@ $^ $(UV_LIB) $(LIBS) -DENABLE_SENDER -DENABLE_RECEIVER
 	# valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all
 
 sender: sample/main.cc src/l1_receive_worker.cc src/l1_send_worker.cc
