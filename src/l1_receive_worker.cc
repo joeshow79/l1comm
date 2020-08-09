@@ -10,7 +10,7 @@ static void alloc_buffer(uv_handle_t *handle, size_t size, uv_buf_t *buf) {
   buf->len = size;
 }
 
-static void on_close(uv_handle_t* handle) {
+static void on_close(uv_handle_t *handle) {
   fprintf(stderr, "%s\n", __FUNCTION__);
   // TODO:
   free(handle);
@@ -43,11 +43,12 @@ static void on_read(uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
       (l1_req.GetRequestType() ==
        L1Request::RequestType::HEARTBEAT_AND_SIGNAL) &&
       (l1_req.GetSignalType() == L1Request::SignalType::INPLACE)) {
-    fprintf(stderr, "Receive HB: %u with signal.\n", l1_req.GetHeartbeatSeqNum());
+    fprintf(stderr, "Receive HB: %u with signal.\n",
+            l1_req.GetHeartbeatSeqNum());
 
     (*cb)();
   } else {
-    if (l1_req.GetRequestType() == L1Request::RequestType::HEARTBEAT){
+    if (l1_req.GetRequestType() == L1Request::RequestType::HEARTBEAT) {
       fprintf(stderr, "Receive HB: %u\n", l1_req.GetHeartbeatSeqNum());
     }
   }
@@ -61,7 +62,7 @@ static void on_connection(uv_stream_t *server, int status) {
   if (status != 0) {
     fprintf(stderr, "New connection error %s\n", uv_strerror(status));
     // error!
-     uv_close((uv_handle_t *)server, on_close);
+    uv_close((uv_handle_t *)server, on_close);
     return;
   }
 
