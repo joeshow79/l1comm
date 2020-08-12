@@ -22,12 +22,6 @@ static struct ConnStruct {
   std::atomic<int> status{-1};
 } conn_struct;
 
-static void write_cb(uv_write_t* req, int status) {
-  fprintf(stderr, "%s\n", __FUNCTION__);
-
-  free(req);
-}
-
 static void on_close(uv_handle_t* handle) {
   fprintf(stderr, "%s\n", __FUNCTION__);
   // TODO:
@@ -42,7 +36,7 @@ static void send_heartbeat_cb(uv_write_t* req, int status) {
 
     conn_struct.status.store(-1);
     uv_timer_stop(conn_struct.timer);
-  } else { 
+  } else {
     fprintf(stderr, "----------------%s ok\n", __FUNCTION__);
   }
 
@@ -165,14 +159,14 @@ L1SendWorker::L1SendWorker(const std::string& host, int port)
 bool L1SendWorker::Start() {
   fprintf(stderr, "L1SendWorker::%s\n", __FUNCTION__);
 
-  //signal(SIGPIPE, SIG_IGN);
-  //struct sigaction act;
-  //memset(&act, 0, sizeof(act));
-  //act.sa_handler = SIG_IGN;
-  //act.sa_flags = SA_RESTART;
-  //int r = sigaction(SIGPIPE, &act, NULL);
-  //if (r) {
-    //fprintf(stderr, "error at setup signal handler\n");
+  // signal(SIGPIPE, SIG_IGN);
+  // struct sigaction act;
+  // memset(&act, 0, sizeof(act));
+  // act.sa_handler = SIG_IGN;
+  // act.sa_flags = SA_RESTART;
+  // int r = sigaction(SIGPIPE, &act, NULL);
+  // if (r) {
+  // fprintf(stderr, "error at setup signal handler\n");
   //}
 
   stop_ = false;

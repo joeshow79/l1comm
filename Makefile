@@ -1,10 +1,12 @@
 .PHONY: all clean
 
-UV_LIB=$.lib/libuv.a
 CFLAGS=-g -Wall -I./include -I./src -std=c++14 -O0
 LIBS=
 
 uname_S=$(shell uname -s)
+
+uname_P=$(shell uname -p)
+UV_LIB=$.lib/$(uname_P)/libuv.a
 
 ifeq (Linux, $(uname_S))
 LIBS=-lrt -ldl -lm -pthread

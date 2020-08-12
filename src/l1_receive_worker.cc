@@ -103,7 +103,7 @@ void L1ReceiveWorker::thread_task(void *arg) {
   server->data = (void *)(&pthis->Callback());
 
   while (false == pthis->Stopped()) {
-    int ret = uv_run(L1ReceiveWorker::GetLoop(), UV_RUN_NOWAIT);
+    uv_run(L1ReceiveWorker::GetLoop(), UV_RUN_NOWAIT);
     // fprintf(stderr, "error code: %d. %s, %s\n", ret, uv_err_name(ret),
     // uv_strerror(ret));
 
