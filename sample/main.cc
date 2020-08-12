@@ -3,6 +3,9 @@
 #include <thread>
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <signal.h>
 
 #include "l1.h"
 #include "l1_receive_worker.h"
@@ -13,6 +16,8 @@ void receiver_callback(void) {
 }
 
 int main() {
+  signal(SIGPIPE, SIG_IGN);
+
 #if ENABLE_RECEIVER
     std::function<void(void)> cb = receiver_callback;
     L1ReceiveWorker receiver{"0.0.0.0", 3011, cb};
@@ -33,9 +38,15 @@ int main() {
     sender.Start();
 #endif
 
+#ifdef RUN_RANDOM_TIME
+  srand(time(NULL));
+  int run_time = rand() % 13 + 1; // 1 ~ 13
+  std::this_thread::sleep_for(std::chrono::seconds(run_time));
+#else
     while (true) {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+#endif
 
 #ifdef ENABLE_RECEIVER
     receiver.Stop();

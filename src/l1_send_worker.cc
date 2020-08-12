@@ -38,8 +38,12 @@ static void send_heartbeat_cb(uv_write_t* req, int status) {
   fprintf(stderr, "%s\n", __FUNCTION__);
 
   if (status < 0) {
+    fprintf(stderr, "----------------%s error\n", __FUNCTION__);
+
     conn_struct.status.store(-1);
     uv_timer_stop(conn_struct.timer);
+  } else { 
+    fprintf(stderr, "----------------%s ok\n", __FUNCTION__);
   }
 
   free((L1Response*)req->data);
@@ -161,14 +165,15 @@ L1SendWorker::L1SendWorker(const std::string& host, int port)
 bool L1SendWorker::Start() {
   fprintf(stderr, "L1SendWorker::%s\n", __FUNCTION__);
 
-  struct sigaction act;
-  memset(&act, 0, sizeof(act));
-  act.sa_handler = SIG_IGN;
-  act.sa_flags = SA_RESTART;
-  int r = sigaction(SIGPIPE, &act, NULL);
-  if (r) {
-    fprintf(stderr, "error at setup signal handler\n");
-  }
+  //signal(SIGPIPE, SIG_IGN);
+  //struct sigaction act;
+  //memset(&act, 0, sizeof(act));
+  //act.sa_handler = SIG_IGN;
+  //act.sa_flags = SA_RESTART;
+  //int r = sigaction(SIGPIPE, &act, NULL);
+  //if (r) {
+    //fprintf(stderr, "error at setup signal handler\n");
+  //}
 
   stop_ = false;
 
